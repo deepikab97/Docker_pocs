@@ -1,0 +1,67 @@
+Deploy 3 tier application in docker container expose frontend to internet(on same and different machine)
+			
+			
+			1)Run in the ubuntu	
+   	       			sudo apt-get update
+					sudo apt install openjdk-11-jdk
+					javac -version
+					sudo apt-get install maven
+
+			2)run mysql container
+			docker network create devnet
+			sudo docker run -dp 3306:3306 --name mysql --network devnet -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=employeedb mysql:5.7
+			sudo docker exec -it <containerID> /bin/bash
+			mysql -uroot -p
+
+				sudo docker inspect <container ID)
+				copy the IP address
+			    check database
+				
+			3)Go to the spring boot application
+				remove the port
+				go to .java file
+				comment 4 lines
+				
+			4)go to root directory	
+				mvn clean install -DskipTests -Dhost=172.18.0.2  -Dmysql_user=root -Dmysql_password=root
+				//java  -DskipTests -Dhost=172.18.0.2  -Dmysql_user=root -Dmysql_password=root -jar target/app.jar
+			
+				docker build -t springapp .
+				docker run -it -p 8080:8080 --name springapp --network devnet  -e host=mysql -e mysql_user=root -e mysql_password=root <image id>
+			5)go to browser copy the insatnce IP:8080/api/v1/employees
+			
+			
+			docker tag    deepikab97/docker_pocs21:my-spring-app
+			docker push deepikab97/docker_pocs21:my-spring-app
+			
+			6)sudo docker exec -it <containerID> /bin/bash
+			  mysql -uroot -p
+			 INSERT INTO employees VALUES (1,"deepika@gmail.com","Deepika","Battewar"),(2,"akshay@gmail.com","Akshay","Kamthe");
+			 
+			7)Go to Angular app
+				change the DOckerfile
+				
+										#stage-1 :Build
+				                        FROM node:10-alpine as build-step
+										RUN mkdir -p /app1
+										WORKDIR /app1
+										COPY package.json /app1
+										RUN npm install
+										COPY . /app1
+										RUN npm run build --prod
+
+										### STAGE 2: Run ###
+                                        FROM nginx:1.17.1-alpine
+                                        #copy the dist-output from our first image (called build, remember?) to our new image. Precisely into the NGINX public folder.
+                                        COPY --from=build-step  /app1/dist/app /usr/share/nginx/html
+										
+			8)go to employee.servivce.ts file
+			 change baseurl with public address of instance
+			  private baseURL="http://53.72.45.12:8080/api/v1/employees";
+										
+				
+			9)docker build -t angular-app .
+			docker run -d -it -p 80:80/tcp --name angular-app --network devnet <imageid>
+			 
+			10)go and check the browser
+				IP address:80
