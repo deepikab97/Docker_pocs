@@ -1,0 +1,436 @@
+
+
+Install Docker Hub
+
+
+on ubuntu:
+		
+		sudo apt update
+		sudo apt install apt-transport-https ca-certificates curl software-properties-common
+		curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+		sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable"
+		sudo apt update
+		apt-cache policy docker-ce
+		sudo apt install docker-ce
+		sudo systemctl status docker
+		sudo apt install docker.io
+		sudo adduser deepika
+		sudo usermod -aG docker deepika
+		sudo su deepika
+		sudo chmod -R a+rwx /path/to/folder or usermod -g 0 -o deepika
+		mkdir /home/deepika/pocs
+		CREATE TABLE employee (id int(255),name varchar(255));
+		INSERT INTO employee VALUES (1, "Deepika");
+		
+
+
+
+
+1.What is difference between virtulization and dockerization
+
+	Virtualization enables you to run multiple operating systems on the hardware of a single physical server, 
+	while containerization enables you to deploy multiple applications using the same operating system on a single virtual machine or server. 
+	
+	The simple difference is that Docker containers share the OS Kernel and bypass the extra Operating layer of the Hypervisor. 
+	In Vmware the VMs will not share the OS Kernel and spin as standalone instances of OS on the Hypervisor.
+	
+	
+2.LXC , Namespace and Cgroups
+
+	LXC (LinuX Containers) is a OS-level virtualization technology that allows creation and running of multiple isolated Linux virtual environments (VE) on a single control host. ... 
+	This it achieves using a high-level API that provides a lightweight virtualization solution to run processes in isolation
+
+	A namespace is a declarative region that provides a scope to the identifiers (the names of types, functions, variables, etc) inside it. 
+	Namespaces are used to organize code into logical groups and to prevent name collisions that can occur especially when your code base includes
+	multiple libraries.
+	
+	cgroups limits the resources which a process or set of processes can use these resources could be CPU,Memory,Network I/O or access to filesystem 
+	while namespace restrict the visibility of group of processes to the rest of the system
+	
+3.Study cmd vs entrypoint
+	CMD sets default command and/or parameters, which can be overwritten from command line when docker container runs.
+	e.g.
+	CMD ["echo", "Hello Docker"]
+	
+	$ sudo docker run <image-id>
+	Hello Docker
+	$ sudo docker run <image-id> hostname   # hostname is exec to override CMD
+	244be5006f32
+	
+	
+   ENTRYPOINT command and parameters will not be overwritten from command line. Instead, all command line arguments will be added after ENTRYPOINT parameters.
+
+	e.g.
+	ENTRYPOINT ["echo", "Hello Docker"]
+	
+	$ sudo docker run <image-id>
+	Hello Docker
+	$ sudo docker run <image-id> hostname   # hostname is exec to override CMD
+	Hello Docker 244be5006f32
+	
+4.Study difference between add and copy
+
+		COPY takes in a src and destination. It only lets you copy in a local file or directory from your host (the machine building the Docker image) 
+		into the Docker image itself.
+		
+		ADD lets you do that too, but it also supports 2 other sources. First, you can use a URL instead of a local file / directory. 
+		Secondly, you can extract a tar file from the source directly into the destination
+
+5.Study port mapping in docker
+		In Docker, the containers themselves can have applications running on ports. When you run a container, if you want to access the 
+		application in the container via a port number,you need to map the port number of the container to the port number of the Docker host
+		
+		e.g docker run -d -p 8000:80 nginx
+		
+		
+		
+6.Study docker networking
+		
+		Docker’s networking subsystem is pluggable, using drivers. Several drivers exist by default, and provide core networking functionality:
+			6.1.bridge: The default network driver. If you don’t specify a driver, this is the type of network you are creating.
+			Bridge networks are usually used when your applications run in standalone containers that need to communicate. See bridge networks.
+
+			6.2 host: For standalone containers, remove network isolation between the container and the Docker host, and use the host’s networking directly.
+			See use the host network.
+			
+			6.3 overlay: Overlay networks connect multiple Docker daemons together and enable swarm services to communicate with each other. 
+			You can also use overlay networks to facilitate communication between a swarm service and a standalone container, or between two standalone containers 
+			on different Docker daemons. This strategy removes the need to do OS-level routing between these containers. See overlay networks.
+			
+			6.4 macvlan: Macvlan networks allow you to assign a MAC address to a container, making it appear as a physical device on your network. 
+			The Docker daemon routes traffic to containers by their MAC addresses. Using the macvlan driver is sometimes the best choice when dealing
+			with legacy applications that expect to be directly connected to the physical network, rather than routed through the Docker host’s network stack.
+			
+			none: For this container, disable all networking. Usually used in conjunction with a custom network driver. none is not available for swarm services.
+			See disable container networking.
+			
+			Network plugins: You can install and use third-party network plugins with Docker. These plugins are available from Docker Hub or
+			from third-party vendors. See the vendor’s documentation for installing and using a given network plugin.
+
+7. Docker layering
+		
+		-The major difference between a container and an image is the top writable layer. All writes to the container that add new or modify existing data
+		are stored in this writable layer. When the container is deleted, the writable layer is also deleted. The underlying image remains unchanged.
+		Because each container has its own writable container layer, and all changes are stored in this container layer, multiple containers can share
+		access to the same underlying image and yet have their own data state.
+		-Docker uses storage drivers to manage the contents of the image layers and the writable container layer. Each storage driver handles the implementation 
+		differently, but all drivers use stackable image layers and the copy-on-write (CoW) strategy.
+		 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+1.Write a docker file for Java, NodeJS, Python, AngularJs
+
+	JAVA:
+	----
+		1.Create Java application
+		2.Create Dockerfile
+		
+			#Add base image
+					FROM openjdk:8
+					COPY . /var/www/java
+					WORKDIR /var/www/java
+
+
+					RUN ["javac", "SampleJava.java"]
+					CMD ["java","SampleJava"]
+					
+		3.buld docker image
+			docker build -t my-java-app .
+			
+		4.run docker image
+			docker run my-java-app
+
+
+		5.push into doker hub
+		docker tag  b5c4a012cefc  deepikab97/docker_pocs21:my-java-app
+		docker login
+		docker push deepikab97/docker_pocs21:my-java-app
+		
+		
+	NodeJs:
+	------
+		https://nodejs.org/en/docs/guides/nodejs-docker-webapp/
+		
+		FROM node:14
+
+		# Create app directory
+		WORKDIR /usr/src/app
+
+		# Install app dependencies
+		# A wildcard is used to ensure both package.json AND package-lock.json are copied
+		# where available (npm@5+)
+		COPY package*.json ./
+
+		RUN npm install
+		# If you are building your code for production
+		# RUN npm ci --only=production
+
+		# Bundle app source
+		COPY . .
+
+		EXPOSE 8080
+		
+	AngularJs:
+	----------
+	
+			1.create angularjs application >ng new applicationname
+										   >npm start
+										   >ng serve --open
+			2.create dockerfile
+
+					#Stage 1-build
+
+					FROM node:12.7-alpine AS build
+
+					#define our current path inside of the container
+					WORKDIR /usr/src/app
+
+					#copying two files to our work directory 
+					COPY package.json package-lock.json ./
+
+					#force cleaning the cache of node otherwise it can throw an error of core-js being outdated and installing the node packages from the package.json
+					RUN npm cache clean --force
+					RUN npm i
+
+					#again copying the files into the image
+					COPY . .
+
+					#build our angular application
+					RUN npm run build
+
+
+
+					### STAGE 2: Run ###
+					FROM nginx:1.17.1-alpine
+					#copy the dist-output from our first image (called build, remember?) to our new image. Precisely into the NGINX public folder.
+					COPY --from=build /usr/src/app/dist/Angular-docker /usr/share/nginx/html
+					
+			3.Build docker 
+				docker build -t dockerized-angular-app-multistage-image .  
+					-(“.”) defines the location of the Dockerfile.
+			
+
+				
+			4.Run/execute the docker
+				docker run --name dockerized-angular-app-multistage-image -d -p 8080:80 dockerized-angular-app-multistage-image
+				
+			5. Run IP address :8080 port	
+
+2. Link mysql container with backend container
+
+										FROM node:10-alpine as build-step
+										RUN mkdir -p /app1
+										WORKDIR /app1
+										COPY package.json /app1
+										RUN npm install
+										COPY . /app1
+										RUN npm run build --prod
+
+										### STAGE 2: Run ###
+                                        FROM nginx:1.17.1-alpine
+                                        #copy the dist-output from our first image (called build, remember?) to our new image. Precisely into the NGINX public folder.
+                                        COPY --from=build-step  /app1/dist/app /usr/share/nginx/html
+										
+										docker run -d -it -p 80:80/tcp --name angular-app --network devnet <imageid>
+
+3. Deploy 3 tier application in docker container expose frontend to internet(on same and different machine)
+			1)Run in the ubuntu	
+   	       			sudo apt-get update
+					sudo apt install openjdk-11-jdk
+					javac -version
+					sudo apt-get install maven
+
+			2)run mysql container
+			docker network create devnet
+			sudo docker run -dp 3306:3306 --name mysql --network devnet -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=employeedb mysql:5.7
+			sudo docker exec -it <containerID> /bin/bash
+			mysql -uroot -p
+
+				sudo docker inspect <container ID)
+				copy the IP address
+			check database
+			
+			C:\Program Files (x86)\Java\jdk1.8.0_171\bin
+				
+			3)Go to the spring boot application
+				remove the port
+				go to .java file
+				comment 4 lines
+				
+			4)go to root directory	
+				mvn clean install -DskipTests -Dhost=172.18.0.2  -Dmysql_user=root -Dmysql_password=root
+				java  -DskipTests -Dhost=172.18.0.2  -Dmysql_user=root -Dmysql_password=root -jar target/app.jar
+			
+				docker build -t springapp .
+				docker run -it -p 8080:8080 --name springapp --network devnet  -e host=mysql -e mysql_user=root -e mysql_password=root image id
+			5)go to browser copy the insatnce IP:8080/api/v1/employees
+			
+			
+			docker tag    deepikab97/docker_pocs21:my-spring-app
+			docker push deepikab97/docker_pocs21:my-spring-app
+			
+			6)sudo docker exec -it <containerID> /bin/bash
+			  mysql -uroot -p
+			INSERT INTO employees VALUES (1,"deepika@gmail.com","Deepika","Battewar"),(2,"akshay@gmail.com","Akshay","Kamthe");
+			Reference:https://github.com/mundanecode/docker-frontend-backend-db
+					https://mundanecode.com/posts/three-tier-architecture-in-docker/
+			
+4. Volume mount- Delete myql container and create new with previous data
+
+		4.1 pull mysql image & create directory on machine  /home/deepika/tests  to store  container data from  var/lib/mysql
+		
+		sudo docker run -dp 3306:3306 --name mysql -v /home/deepika/tests:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=employee_db mysql:5.7
+		
+		4.2 run image in interactve mode -create database,table,insert record
+		
+			sudo docker exec -it <containerID> /bin/bash	
+
+			mysql -u root -p       //enter password - root
+					show databases;
+					use databasenam;
+					
+					CREATE TABLE employee (id int(255),name varchar(255));
+
+					INSERT INTO table_name VALUES (value1, value2, value3, ...);
+					SELECT * FROM tablename;
+				INSERT INTO employees VALUES (1,"Deepika"),(2,"Akshay");
+					exit
+					exit
+		4.3 remove container  
+			
+			sudo docker rm -f <container ID>
+				docker ps -a
+		4.4 create new mysql container & specify same location also check data from table will show same data 
+
+				sudo docker run -dp 3306:3306 --name mysql -v /home/deepika/tests:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=employee_db mysql:5.7
+				
+				sudo docker exec -it <containerID> /bin/bash	
+
+				mysql -u root -p       //enter password - root
+				show databases;
+				use databasenam;
+
+5.Connect Docker cli to Docker Daemon installed on different files
+
+common steps for docker daemon and docker CLI
+===============================================
+
+		sudo apt update
+		sudo apt install apt-transport-https ca-certificates curl software-properties-common
+		curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+		sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable"
+		sudo apt update
+		
+
+
+in docker daemon execute below steps
+========================================
+
+		apt-cache policy docker-ce
+		sudo apt install docker-ce
+		//sudo adduser deepika
+		sudo usermod -aG docker ubuntu
+
+
+
+in docker cli server execute below steps
+================================================
+
+
+    $    sudo apt install docker-ce-cli
+
+
+
+in docker daemon server execute below steps
+===============================================
+
+
+
+1)  Create the directory to store the configuration file.
+
+
+       $    sudo mkdir -p /etc/systemd/system/docker.service.d
+
+2)   Create a new file to store the daemon options.
+
+
+        $     sudo vi /etc/systemd/system/docker.service.d/options.conf
+
+
+3)   Now make it look like this and save the file when you’re done: 
+  
+       $ [Service]
+         ExecStart=
+         ExecStart=/usr/bin/dockerd -H unix:// -H tcp://0.0.0.0:2375
+		
+		//ExecStart=/usr/bin/dockerd --graph=/data/docker -H tcp://0.0.0.0:2375 -H unix://var/run/docker.sock -H fd:// --containerd=/run/containerd/containerd.sock
+
+
+4)   Now, reload the systemd daemon and restart the docker service:
+
+
+           Reload the systemd daemon.
+             
+       $     sudo systemctl daemon-reload
+
+
+
+5)   # Restart Docker.
+
+
+       sudo systemctl restart docker
+
+That’s going to let you continue to connect to the Docker daemon from within the VM thanks to
+ -H unix://, but it also exposes the Docker Daemon with -H tcp://0.0.0.0:2375 so that anyone 
+can connect to it over the non-encrypted port.
+
+
+
+
+  execute below steps in docker cli
+=======================================
+
+		export DOCKER_HOST=tcp://docker daemon IP:2375
+		echo $DOCKER_HOST --for checking connection
+		
+		docker ps
+		
+		
+
+
+
+
+
+
+
+
+
+
+
+6. How to override CMD command 
+
+
+7. Tag docker image and push it to dockerhub(private repo)
+		docker tag local-image:tagname new-repo:tagname
+		docker push new-repo:tagname
+		
+		
+8. Write Multistage docker file
+9. Set env variable using dockerfile as well as command line
